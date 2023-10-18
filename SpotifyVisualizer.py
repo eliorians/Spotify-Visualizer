@@ -45,23 +45,23 @@ def getTrackLoudness(track):
 def getTrackValence(track):
     return spotify.audio_features(track)[0]['valence']
 
-def getTrackInstrumentalness(track):
-    return spotify.audio_features(track)[0]['instrumentalness']
+#range from 0.0 to 1.0 representing the measure of intensity
+def getTrackEnergy(track):
+    return spotify.audio_features(track)[0]['energy']
 
 def main():
     
-    #TODO
-    #get top 5 songs from user
-    #get 5 values (popularity, danceability, loudness, valence, instrumentalness)
-    #create radar chart using matplotlib
+    #todo get top 5 songs from user
+    #get 5 values (popularity, danceability, loudness, valence, tempo)
+    #todo create radar chart using matplotlib
 
     for key, value in track_id.items():
         print("Song: "+ str(key))
-        print("Popularity: "       + str(getTrackPopularity(value)))
-        print("Danceability: "     + str(getTrackDanceability(value)))
-        print("Loudness: "         + str(getTrackLoudness(value)))
-        print("Valence: "          + str(getTrackValence(value)))
-        print("Instrumentalness: " + str(getTrackInstrumentalness(value)))
+        print("Popularity: "   + str(getTrackPopularity(value)))
+        print("Danceability: " + str(getTrackDanceability(value)))
+        print("Loudness: "     + str(getTrackLoudness(value)))
+        print("Valence: "      + str(getTrackValence(value)))
+        print("Energy: "        + str(getTrackEnergy(value)))
         print()
 
 if __name__ == "__main__":
