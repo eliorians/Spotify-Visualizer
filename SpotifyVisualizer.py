@@ -29,21 +29,40 @@ track_id= {
     "money trees"   : "2HbKqm4o0w5wEeEFXm2sD4"
 }
 
+#range of 0 to 100 based on listens and how recent the listens are
 def getTrackPopularity(track):
     return spotify.track(track)['popularity']
 
+#range of 0.0 to 1.0 with 1.0 being most dancable
 def getTrackDanceability(track):
     return spotify.audio_features(track)[0]['danceability']
 
+#range from -60 to 0 decibals
+def getTrackLoudness(track):
+    return spotify.audio_features(track)[0]['loudness']
+
+#range from 0.0 to 1.0 describing the musical positiveness conveyed by a track (high = happy(pos), low = sad(neg))
+def getTrackValence(track):
+    return spotify.audio_features(track)[0]['valence']
+
+def getTrackInstrumentalness(track):
+    return spotify.audio_features(track)[0]['instrumentalness']
 
 def main():
     
+    #TODO
+    #get top 5 songs from user
+    #get 5 values (popularity, danceability, loudness, valence, instrumentalness)
+    #create radar chart using matplotlib
+
     for key, value in track_id.items():
         print("Song: "+ str(key))
-        print("Popularity: "   + str(getTrackPopularity(value)))
-        print("Danceability: " + str(getTrackDanceability(value)))
+        print("Popularity: "       + str(getTrackPopularity(value)))
+        print("Danceability: "     + str(getTrackDanceability(value)))
+        print("Loudness: "         + str(getTrackLoudness(value)))
+        print("Valence: "          + str(getTrackValence(value)))
+        print("Instrumentalness: " + str(getTrackInstrumentalness(value)))
         print()
-
 
 if __name__ == "__main__":
     main()
