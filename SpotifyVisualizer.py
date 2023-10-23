@@ -61,7 +61,7 @@ def main():
         print("Danceability: " + str(getTrackDanceability(value)))
         print("Loudness: "     + str(getTrackLoudness(value)))
         print("Valence: "      + str(getTrackValence(value)))
-        print("Energy: "        + str(getTrackEnergy(value)))
+        print("Energy: "       + str(getTrackEnergy(value)))
         print()
 
 if __name__ == "__main__":
