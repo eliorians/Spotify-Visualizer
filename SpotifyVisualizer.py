@@ -3,6 +3,8 @@ from spotipy.oauth2 import SpotifyClientCredentials
 import os
 from dotenv import load_dotenv
 import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
 
 #DOCUMENTATION:
 #https://developer.spotify.com/documentation/web-api
@@ -49,11 +51,63 @@ def getTrackValence(track):
 def getTrackEnergy(track):
     return spotify.audio_features(track)[0]['energy']
 
-def main():
+def scaleLoudness(x):
+    return ((x - (-60)) / (0 - (-60))) * (100 - 0) + 0
+
+def scaleOther(x):
+    return x * 100
+
+def buildRadar(values):
+    labels = ['popularity', 'danceability', 'loudness', 'valence', 'energy']
+    num_vars = len(labels) 
+
+    # Split the circle into even parts and save the angles so we know where to put each axis.
+    angles = np.linspace(0, 2 * np.pi, num_vars, endpoint=False).tolist()
+   
+    # The plot is a circle, so we need to "complete the loop" and append the start value to the end.
+    values += values[:1]
+    angles += angles[:1]
+
+    fig, ax = plt.subplots(figsize=(6, 6), subplot_kw=dict(polar=True))
+
+    # Draw the outline of our data.
+    ax.plot(angles, values, color='red', linewidth=1)
+    # Fill it in.
+    ax.fill(angles, values, color='red', alpha=0.25)
+
+    # Fix axis to go in the right order and start at 12 o'clock.
+    ax.set_theta_offset(np.pi / 2)
+    ax.set_theta_direction(-1)
+
+    # Draw axis lines for each angle and label.
+    ax.set_thetagrids(np.degrees(angles[:-1]), labels)
     
+    # Go through labels and adjust alignment based on where it is in the circle.
+    for label, angle in zip(ax.get_xticklabels(), angles):
+        if angle in (0, np.pi):
+            label.set_horizontalalignment('center')
+        elif 0 < angle < np.pi:
+            label.set_horizontalalignment('left')
+        else:
+            label.set_horizontalalignment('right')
+    
+    # Ensure radar goes from 0 to 100.
+    ax.set_ylim(0, 100)
+    # Set position of y-labels (0-100) to be in the middle of the first two axes.
+    ax.set_rlabel_position(180 / num_vars)
+
+    plt.show()
+
+
+def main():
+        
     #todo get top 5 songs from user
     #get 5 values (popularity, danceability, loudness, valence, tempo)
-    #todo create radar chart using matplotlib
+    #create radar chart using matplotlib
+    
+    value = track_id["revival"]
+    values = [getTrackPopularity(value), scaleOther(getTrackDanceability(value)), scaleLoudness(getTrackLoudness(value)), scaleOther(getTrackValence(value)), scaleOther(getTrackEnergy(value))]
+    buildRadar(values)
 
     for key, value in track_id.items():
         print("Song: "+ str(key))
@@ -63,6 +117,7 @@ def main():
         print("Valence: "      + str(getTrackValence(value)))
         print("Energy: "       + str(getTrackEnergy(value)))
         print()
+
 
 if __name__ == "__main__":
     main()
