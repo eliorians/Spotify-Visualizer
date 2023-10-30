@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import random
 
 #DOCUMENTATION:
 #https://developer.spotify.com/documentation/web-api
@@ -31,6 +32,27 @@ track_id= {
     "money trees"   : "2HbKqm4o0w5wEeEFXm2sD4"
 }
 
+#generates a random color
+def generate_random_color():
+    # Generate random values for red, green, and blue components
+    red = random.randint(0, 255)
+    green = random.randint(0, 255)
+    blue = random.randint(0, 255)
+
+    # Ensure significantly different colors by increasing the range of random values
+    if random.random() < 0.5:
+        red = random.randint(150, 255)
+    if random.random() < 0.5:
+        green = random.randint(150, 255)
+    if random.random() < 0.5:
+        blue = random.randint(150, 255)
+
+    # Convert RGB to hexadecimal format
+    hex_color = "#{:02x}{:02x}{:02x}".format(red, green, blue)
+
+    # Return the random color in hexadecimal format
+    return hex_color
+
 #range of 0 to 100 based on listens and how recent the listens are
 def getTrackPopularity(track):
     return spotify.track(track)['popularity']
@@ -51,29 +73,45 @@ def getTrackValence(track):
 def getTrackEnergy(track):
     return spotify.audio_features(track)[0]['energy']
 
+#scale the value from -60-0 to 0-100
 def scaleLoudness(x):
     return ((x - (-60)) / (0 - (-60))) * (100 - 0) + 0
 
+#scale the value from 0-1 to 0-100
 def scaleOther(x):
     return x * 100
 
-def buildRadar(values):
+def getValues(trackID):
+    values = [] 
+    values.append(getTrackPopularity(trackID))
+    values.append(scaleOther(getTrackDanceability(trackID)))
+    values.append(scaleLoudness(getTrackLoudness(trackID)))
+    values.append(scaleOther(getTrackValence(trackID)))
+    values.append(scaleOther(getTrackEnergy(trackID)))
+    return values
+
+#takes a list of 5 values to be plotted
+def buildRadar(values, names):
     labels = ['popularity', 'danceability', 'loudness', 'valence', 'energy']
     num_vars = len(labels) 
 
     # Split the circle into even parts and save the angles so we know where to put each axis.
     angles = np.linspace(0, 2 * np.pi, num_vars, endpoint=False).tolist()
-   
-    # The plot is a circle, so we need to "complete the loop" and append the start value to the end.
-    values += values[:1]
     angles += angles[:1]
 
     fig, ax = plt.subplots(figsize=(6, 6), subplot_kw=dict(polar=True))
 
-    # Draw the outline of our data.
-    ax.plot(angles, values, color='red', linewidth=1)
-    # Fill it in.
-    ax.fill(angles, values, color='red', alpha=0.25)
+    # Helper function to plot each car on the radar chart.
+    def add_to_radar(song_name, color, value):
+        # The plot is a circle, so we need to "complete the loop" and append the start value to the end.
+        value += value[:1]
+        # Draw the outline of our data.
+        ax.plot(angles, values, color=color, linewidth=1, label=song_name)
+        # Fill it in.
+        ax.fill(angles, values, color=color, alpha=0.25)
+    
+    for i in range(len(values)):
+        add_to_radar(names[i], generate_random_color(), values[i])
 
     # Fix axis to go in the right order and start at 12 o'clock.
     ax.set_theta_offset(np.pi / 2)
@@ -95,29 +133,57 @@ def buildRadar(values):
     ax.set_ylim(0, 100)
     # Set position of y-labels (0-100) to be in the middle of the first two axes.
     ax.set_rlabel_position(180 / num_vars)
-
     plt.show()
 
+#returns list of all track ids in a playlist
+def getPlaylistTrackIDs(playlist):
+    playlistTracks = spotify.playlist_tracks(playlist)['items']
+    playlistTrackIDs = []
+    for i in playlistTracks:
+        track = i['track']
+        playlistTrackIDs.append(track['id'])
+
+    return playlistTrackIDs
+
+#returns list of all track names in a playlist
+def getPlaylistTrackNames(playlist):
+    playlistTracks = spotify.playlist_tracks(playlist)['items']
+    playlistTrackNames = []
+    for i in playlistTracks:
+        track = i['track']
+        playlistTrackNames.append(track['name'])
+
+    return playlistTrackNames
 
 def main():
-        
-    #todo get top 5 songs from user
-    #get 5 values (popularity, danceability, loudness, valence, tempo)
-    #create radar chart using matplotlib
-    
-    value = track_id["revival"]
-    values = [getTrackPopularity(value), scaleOther(getTrackDanceability(value)), scaleLoudness(getTrackLoudness(value)), scaleOther(getTrackValence(value)), scaleOther(getTrackEnergy(value))]
-    buildRadar(values)
 
-    for key, value in track_id.items():
-        print("Song: "+ str(key))
-        print("Popularity: "   + str(getTrackPopularity(value)))
-        print("Danceability: " + str(getTrackDanceability(value)))
-        print("Loudness: "     + str(getTrackLoudness(value)))
-        print("Valence: "      + str(getTrackValence(value)))
-        print("Energy: "       + str(getTrackEnergy(value)))
-        print()
+    playlist_link = 'https://open.spotify.com/playlist/5OWeSaYktfEI313ue6ms1d'
+    #playlist_link = input("Enter a link to a playlist: ")    
+    playlist_link = playlist_link.rsplit('/', 1)[-1]
+    playlist_track_ids =  getPlaylistTrackIDs(playlist_link)
+    playlist_track_names =  getPlaylistTrackNames(playlist_link)
 
+    valuesList = []
+    for i in playlist_track_ids:
+        valuesList.append(getValues(i))
+
+    buildRadar(valuesList, playlist_track_names)
+
+    #radar plot testing
+    #value = track_id["revival"]
+    #values = [getTrackPopularity(value), scaleOther(getTrackDanceability(value)), scaleLoudness(getTrackLoudness(value)), scaleOther(getTrackValence(value)), scaleOther(getTrackEnergy(value))]
+    #buildRadar(values)
+
+    #song value testing
+    # for key, value in track_id.items():
+    #     print("Song: "+ str(key))
+    #     print("Popularity: "   + str(getTrackPopularity(value)))
+    #     print("Danceability: " + str(getTrackDanceability(value)))
+    #     print("Loudness: "     + str(getTrackLoudness(value)))
+    #     print("Valence: "      + str(getTrackValence(value)))
+    #     print("Energy: "       + str(getTrackEnergy(value)))
+    #     print()
+    print("Eli is bad a coding and will be overtaken by chatGPT")
 
 if __name__ == "__main__":
     main()
