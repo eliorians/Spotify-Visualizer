@@ -106,9 +106,9 @@ def buildRadar(values, names):
         # The plot is a circle, so we need to "complete the loop" and append the start value to the end.
         value += value[:1]
         # Draw the outline of our data.
-        ax.plot(angles, values, color=color, linewidth=1, label=song_name)
+        ax.plot(angles, value, color=color, linewidth=1, label=song_name)
         # Fill it in.
-        ax.fill(angles, values, color=color, alpha=0.25)
+        ax.fill(angles, value, color=color, alpha=0.25)
     
     for i in range(len(values)):
         add_to_radar(names[i], generate_random_color(), values[i])
@@ -183,7 +183,6 @@ def main():
     #     print("Valence: "      + str(getTrackValence(value)))
     #     print("Energy: "       + str(getTrackEnergy(value)))
     #     print()
-    print("Eli is bad a coding and will be overtaken by chatGPT")
 
 if __name__ == "__main__":
     main()
