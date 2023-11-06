@@ -18,40 +18,41 @@ Clientsecret=os.getenv("Clientsecret")
 client_credentials_manager = SpotifyClientCredentials(client_id=ClientID, client_secret=Clientsecret)
 spotify = spotipy.Spotify(client_credentials_manager = client_credentials_manager)
 
-#artist IDs
-artist_id= {
-    "kendrickLamar" : "2YZyLoL8N0Wb9xBt1NhZWg",
-    "zachBryan"     : "40ZNYROS4zLfyyBSs2PGe2",
-    "taylorSwift"   : "06HL4z0CvFAxyc27GXpf02",
-    "lilKee"        : "21UqznWenhsInMOKxpVPBd"
-}
-
-#track IDs
-track_id= {
-    "revival"       : "2QfX9Pdz3q66fN3kCXl0Js",
-    "money trees"   : "2HbKqm4o0w5wEeEFXm2sD4"
-}
-
 #generates a random color
 def generate_random_color():
-    # Generate random values for red, green, and blue components
-    red = random.randint(0, 255)
-    green = random.randint(0, 255)
-    blue = random.randint(0, 255)
-
-    # Ensure significantly different colors by increasing the range of random values
-    if random.random() < 0.5:
-        red = random.randint(150, 255)
-    if random.random() < 0.5:
-        green = random.randint(150, 255)
-    if random.random() < 0.5:
-        blue = random.randint(150, 255)
-
-    # Convert RGB to hexadecimal format
-    hex_color = "#{:02x}{:02x}{:02x}".format(red, green, blue)
-
-    # Return the random color in hexadecimal format
-    return hex_color
+    
+    colors = [
+        "#FF0000",  # Red
+        "#00FF00",  # Green
+        "#0000FF",  # Blue
+        "#FFFF00",  # Yellow
+        "#FF00FF",  # Magenta
+        "#00FFFF",  # Cyan
+        "#FFA500",  # Orange
+        "#008080",  # Teal
+        "#800080",  # Purple
+        "#008000",  # Dark Green
+        "#FF4500",  # Orange Red
+        "#FFD700",  # Gold
+        "#ADFF2F",  # Green Yellow
+        "#20B2AA",  # Light Sea Green
+        "#800000",  # Maroon
+        "#F08080",  # Light Coral
+        "#8B4513",  # Saddle Brown
+        "#2E8B57",  # Sea Green
+        "#D2691E",  # Chocolate
+        "#DC143C",  # Crimson
+        "#6A5ACD",  # Slate Blue
+        "#9370DB",  # Medium Purple
+        "#FF69B4",  # Hot Pink
+        "#32CD32",  # Lime Green
+        "#FF6347",  # Tomato
+        "#4B0082",  # Indigo
+        "#8B008B",  # Dark Magenta
+        "#556B2F",  # Dark Olive Green
+    ]
+    
+    return random.choice(colors)
 
 #range of 0 to 100 based on listens and how recent the listens are
 def getTrackPopularity(track):
@@ -91,7 +92,7 @@ def getValues(trackID):
     return values
 
 #takes a list of 5 values to be plotted
-def buildRadar(values, names):
+def buildRadar(values, names, playlistName):
     labels = ['popularity', 'danceability', 'loudness', 'valence', 'energy']
     num_vars = len(labels) 
 
@@ -133,6 +134,11 @@ def buildRadar(values, names):
     ax.set_ylim(0, 100)
     # Set position of y-labels (0-100) to be in the middle of the first two axes.
     ax.set_rlabel_position(180 / num_vars)
+
+    #styling
+    ax.legend(loc='upper right', bbox_to_anchor=(1.3, 1.1))
+    ax.set_title(playlistName, y=1.08)
+
     plt.show()
 
 #returns list of all track ids in a playlist
@@ -155,34 +161,59 @@ def getPlaylistTrackNames(playlist):
 
     return playlistTrackNames
 
+#returns list of all track ids in a album
+def getAlbumTrackIDs(album):
+    albumTracks = spotify.album_tracks(album)['items']
+    albumTrackIDs = []
+    for i in albumTracks:
+        #track = i['track']
+        albumTrackIDs.append(i['id'])
+
+    return albumTrackIDs
+
+#returns list of all track names in a playlist
+def getAlbumTrackNames(album):
+    albumTracks = spotify.album_tracks(album)['items']
+    albumTrackNames = []
+    for i in albumTracks:
+        #track = i['track']
+        albumTrackNames.append(i['name'])
+
+    return albumTrackNames
+
 def main():
 
-    playlist_link = 'https://open.spotify.com/playlist/5OWeSaYktfEI313ue6ms1d'
-    #playlist_link = input("Enter a link to a playlist: ")    
-    playlist_link = playlist_link.rsplit('/', 1)[-1]
-    playlist_track_ids =  getPlaylistTrackIDs(playlist_link)
-    playlist_track_names =  getPlaylistTrackNames(playlist_link)
+    link = input("Enter a link to a playlist or album: ")
 
-    valuesList = []
-    for i in playlist_track_ids:
-        valuesList.append(getValues(i))
+    #determine if an album or a playlist
+    if "/playlist/" in link:
+        #get playlist id
+        playlist_link = link.rsplit('/', 1)[-1]
+        #get playlist info (name, tracks)
+        playlistName = spotify.playlist(playlist_link)['name']
+        playlist_track_ids =  getPlaylistTrackIDs(playlist_link)
+        playlist_track_names =  getPlaylistTrackNames(playlist_link) 
+        #build radar plot
+        valuesList = []
+        for i in playlist_track_ids:
+            valuesList.append(getValues(i))
+        buildRadar(valuesList, playlist_track_names, playlistName)
 
-    buildRadar(valuesList, playlist_track_names)
-
-    #radar plot testing
-    #value = track_id["revival"]
-    #values = [getTrackPopularity(value), scaleOther(getTrackDanceability(value)), scaleLoudness(getTrackLoudness(value)), scaleOther(getTrackValence(value)), scaleOther(getTrackEnergy(value))]
-    #buildRadar(values)
-
-    #song value testing
-    # for key, value in track_id.items():
-    #     print("Song: "+ str(key))
-    #     print("Popularity: "   + str(getTrackPopularity(value)))
-    #     print("Danceability: " + str(getTrackDanceability(value)))
-    #     print("Loudness: "     + str(getTrackLoudness(value)))
-    #     print("Valence: "      + str(getTrackValence(value)))
-    #     print("Energy: "       + str(getTrackEnergy(value)))
-    #     print()
+    elif "/album/" in link:
+        #get album id
+        album_link = link.rsplit('/', 1)[-1]
+        #get album info (name, tracks)
+        albumName = spotify.album(album_link)['name']
+        album_track_ids =  getAlbumTrackIDs(album_link)
+        album_track_names =  getAlbumTrackNames(album_link) 
+        #build radar plot
+        valuesList = []
+        for i in album_track_ids:
+            valuesList.append(getValues(i))
+        buildRadar(valuesList, album_track_names, albumName)
+    else:
+        print("Invalid link. Please try again.")
+        main()
 
 if __name__ == "__main__":
     main()
